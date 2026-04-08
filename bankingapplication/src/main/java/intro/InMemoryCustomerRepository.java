@@ -2,37 +2,35 @@ package intro;
 
 public class InMemoryCustomerRepository implements CustomerRepository {
     
-    // Veritabanı yerine geçecek RAM üzerindeki listemiz (Örn: Maksimum 100 müşteri)
     private Customer[] customers = new Customer[100];
-    private int currentCount = 0; // O an kaç müşteri kayıtlı olduğunu tutar
+    private int currentCount = 0; 
 
     @Override
-    public void add(Customer customer) {
-        // 1. Kural: Aynı TC ile kayıt var mı kontrol et!
+    public boolean add(Customer customer) {
+        // 1. Kural: Aynı TC ile kayıt var mı?
         if (findByTc(customer.getTcNo()) != null) {
             System.out.println("Hata: " + customer.getTcNo() + " TC kimlik numarası ile zaten bir kayıt var!");
-            return; // Hata varsa metodu burada kes, aşağı inme.
+            return false; // Başarısız oldu
         }
 
-        // 2. Kural: Dizi limiti dolmadıysa müşteriyi diziye ekle
+        // 2. Kural: Kapasite kontrolü
         if (currentCount < customers.length) {
             customers[currentCount] = customer;
             currentCount++;
-            System.out.println("Başarılı: " + customer.getName() + " " + customer.getSurname() + " sisteme kaydedildi.");
+            return true; // Başarıyla eklendi
         } else {
             System.out.println("Hata: Banka müşteri kapasitesi doldu!");
+            return false; // Başarısız oldu
         }
     }
 
     @Override
     public Customer findByTc(String tcNo) {
-        // Dizideki mevcut müşterileri dön ve TC'leri karşılaştır
         for (int i = 0; i < currentCount; i++) {
-            // DİKKAT: String (Referans tip) karşılaştırması yaparken == değil .equals() kullanılır! (Hocanın notu)
             if (customers[i].getTcNo().equals(tcNo)) {
-                return customers[i]; // Eşleşme bulundu, müşteriyi geri gönder
+                return customers[i];
             }
         }
-        return null; // Döngü bitti, eşleşme yoksa boş (null) dön
+        return null;
     }
 }

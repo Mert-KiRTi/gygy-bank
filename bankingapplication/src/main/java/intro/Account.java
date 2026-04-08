@@ -3,14 +3,24 @@ package intro;
 public class Account {
     private String accountNumber;
     private double balance;
+    // YENİ: Hesabın birine ait olup olmadığını tutan kilit (Encapsulation)
+    private boolean isAssigned = false; 
 
-    // Constructor (Yapıcı Metot) - Hesap açılırken sıfır bakiye ile başlar
     public Account(String accountNumber) {
         this.accountNumber = accountNumber;
         this.balance = 0.0;
     }
 
-    // Para Yatırma
+    // YENİ: Hesabı mühürleme metodu
+    public void assign() {
+        this.isAssigned = true;
+    }
+
+    // YENİ: Hesabın durumunu okuma metodu
+    public boolean isAssigned() {
+        return this.isAssigned;
+    }
+
     public void deposit(double amount) {
         if (amount > 0) {
             this.balance += amount;
@@ -20,7 +30,6 @@ public class Account {
         }
     }
 
-    // Para Çekme
     public void withdraw(double amount) {
         if (amount > 0 && this.balance >= amount) {
             this.balance -= amount;
@@ -32,12 +41,13 @@ public class Account {
         }
     }
 
-    // Bakiye Sorgulama (Senin istediğin özellik)
-    public double getBalance() {
-        return this.balance;
+    public void displayAccountInfo() {
+        System.out.println("----- Hesap Özeti -----");
+        System.out.println("Hesap No : " + this.accountNumber);
+        System.out.println("Bakiye   : " + this.balance + " TL");
+        System.out.println("-----------------------");
     }
 
-    public String getAccountNumber() {
-        return this.accountNumber;
-    }
+    public double getBalance() { return this.balance; }
+    public String getAccountNumber() { return this.accountNumber; }
 }
