@@ -2,6 +2,8 @@ package com.turkcell.spring_starter.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.Optional;
 
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.stereotype.Service;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.turkcell.spring_starter.dto.CreateCategoryRequest;
 import com.turkcell.spring_starter.dto.CreatedCategoryResponse;
 import com.turkcell.spring_starter.dto.ListCategoryResponse;
+import com.turkcell.spring_starter.dto.UpdateCategoryRequest;
 import com.turkcell.spring_starter.entity.Category;
 import com.turkcell.spring_starter.repository.CategoryRepository;
 
@@ -51,5 +54,38 @@ public class CategoryServiceImpl {
         }
 
         return responseList;
+    }
+
+    public ListCategoryResponse getById(UUID id) {
+        Optional<Category> category = categoryRepository.findById(id);
+        if (category.isPresent()) {
+            ListCategoryResponse response = new ListCategoryResponse();
+            response.setId(category.get().getId());
+            response.setName(category.get().getName());
+            return response;
+        }
+        return null;
+    }
+
+    public CreatedCategoryResponse update(UpdateCategoryRequest updateCategoryRequest) {
+        Optional<Category> category = categoryRepository.findById(updateCategoryRequest.getId());
+        if (category.isPresent()) {
+            category.get().setName(updateCategoryRequest.getName());
+            Category updatedCategory = categoryRepository.save(category.get());
+
+            CreatedCategoryResponse response = new CreatedCategoryResponse();
+            response.setId(updatedCategory.getId());
+            response.setName(updatedCategory.getName());
+            return response;
+        }
+        return null;
+    }
+
+    public boolean delete(UUID id) {
+        if (categoryRepository.existsById(id)) {
+            categoryRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }
