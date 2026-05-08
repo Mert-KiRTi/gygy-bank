@@ -4,23 +4,32 @@ import com.turkcell.library_cqrs.library_cqrs.core.mediator.cqrs.Command;
 import com.turkcell.library_cqrs.library_cqrs.core.mediator.cqrs.CommandHandler;
 import com.turkcell.library_cqrs.library_cqrs.core.mediator.cqrs.Query;
 import com.turkcell.library_cqrs.library_cqrs.core.mediator.cqrs.QueryHandler;
+import com.turkcell.library_cqrs.library_cqrs.core.mediator.pipeline.PipelineBehavior;
+import com.turkcell.library_cqrs.library_cqrs.core.mediator.pipeline.RequestHandlerDelegate;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Spring-based Mediator implementation
  * Resolves and executes appropriate handlers for commands and queries
- * using Spring's ApplicationContext and bean discovery mechanism
+ * using Spring's ApplicationContext and bean discovery mechanism.
+ * 
+ * Integrates with PipelineBehavior implementations to process requests through
+ * a chain of behaviors before reaching the actual handler (e.g., logging, performance monitoring).
  */
 @Component
 public class SpringMediator implements Mediator {
 
     private final ApplicationContext applicationContext;
+    private final List<PipelineBehavior> pipelineBehaviors;
 
-    public SpringMediator(ApplicationContext applicationContext) {
+    public SpringMediator(ApplicationContext applicationContext, List<PipelineBehavior> pipelineBehaviors) {
         this.applicationContext = applicationContext;
+        this.pipelineBehaviors = pipelineBehaviors != null ? pipelineBehaviors : new ArrayList<>();
     }
 
     @Override
@@ -38,7 +47,8 @@ public class SpringMediator implements Mediator {
             );
         }
 
-        return handler.handle(command);
+        // Execute the command through the pipeline chain
+        return executeThroughPipeline(command, () -> handler.handle(command));
     }
 
     @Override
@@ -56,7 +66,8 @@ public class SpringMediator implements Mediator {
             );
         }
 
-        return handler.handle(query);
+        // Execute the query through the pipeline chain
+        return executeThroughPipeline(query, () -> handler.handle(query));
     }
 
     /**
@@ -127,6 +138,36 @@ public class SpringMediator implements Mediator {
         // Get generic type parameters from the handler class
         return handler.getClass().getGenericInterfaces()[0].getTypeName()
                 .contains(query.getClass().getSimpleName());
+    }
+
+    /**
+     * Executes a request through the pipeline chain of behaviors.
+     * Each behavior wraps the next one, allowing for cross-cutting concerns
+     * to be applied in order (logging, performance monitoring, etc.).
+     *
+     * @param request The request object being processed
+     * @param handler The final handler to be called after all behaviors
+     * @return The result from the handler execution
+     */
+    private <R> R executeThroughPipeline(Object request, RequestHandlerDelegate<R> handler) {
+        // If no behaviors are configured, execute the handler directly
+        if (pipelineBehaviors.isEmpty()) {
+            return handler.handle();
+        }
+
+        // Build the pipeline chain starting from the final handler
+        // and wrapping it with each behavior in reverse order
+        RequestHandlerDelegate<R> pipeline = handler;
+
+        // Wrap the pipeline with behaviors in reverse order
+        // This ensures they execute in the order they were registered
+        for (int i = pipelineBehaviors.size() - 1; i >= 0; i--) {
+            PipelineBehavior behavior = pipelineBehaviors.get(i);
+            RequestHandlerDelegate<R> finalPipeline = pipeline;
+            pipeline = () -> behavior.handle(request, finalPipeline);
+        }
+
+        return pipeline.handle();
     }
 
     /**
