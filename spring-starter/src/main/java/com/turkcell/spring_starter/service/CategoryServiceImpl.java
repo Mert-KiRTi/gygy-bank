@@ -2,9 +2,8 @@ package com.turkcell.spring_starter.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.UUID;
 
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.stereotype.Service;
 
 import com.turkcell.spring_starter.dto.CreateCategoryRequest;
@@ -23,6 +22,11 @@ public class CategoryServiceImpl {
     public CategoryServiceImpl(CategoryRepository categoryRepository, EntityManager entityManager) {
         this.categoryRepository = categoryRepository;
         this.entityManager = entityManager;
+    }
+
+    public Category getById(UUID id)
+    {
+        return categoryRepository.findById(id).orElse(null);
     }
 
     public CreatedCategoryResponse create(CreateCategoryRequest createCategoryRequest) {
