@@ -45,7 +45,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         // Kullanıcıyı sisteme tanıt..
                         String userId = jwtService.extractUserId(token);
                         String email = jwtService.extractEmail(token);
-                        List<String> roles = Collections.EMPTY_LIST; //TODO: Implement
+                        List<String> roles = jwtService.extractRoles(token);
                         userContext.setUser(userId, email, roles);
                     }
                 }catch(Exception e){

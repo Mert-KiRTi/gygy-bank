@@ -1,5 +1,7 @@
 package com.turkcell.spring_cqrs.application.features.user.command.register;
 
+import java.util.List;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +35,8 @@ public class RegisterCommandHandler implements CommandHandler<RegisterCommand, R
         User user = new User();
         user.setEmail(command.email());
         user.setPassword(passwordEncoder.encode(command.password()));
+        // Varsayılan olarak USER rolü ata
+        user.setRoles(List.of("USER"));
 
         userRepository.save(user);
         
